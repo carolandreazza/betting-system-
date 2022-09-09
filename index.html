@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body{
+            background-color: darkgreen;
+        }
+        h2{
+            text-align: center;
+            color: white;
+            border: 1px dashed white;
+            padding: 10px 0;
+        }
+        input{
+            width: 100%;
+            padding-left: 10px;
+            color: black;
+            height: 40px;
+        }
+        button{
+            width: 100%;
+            background-color: cornflowerblue;
+            height: 40px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h2>Resultado da aposta: ...</h2>
+    <br/>
+    <input placeholder="Sua aposta..." type="text"/>
+    <button id="enviar">Enviar aposta!</button>
+    <button id="pegar">Pegar recompensa!</button>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.5/web3.min.js"></script>
+    <script>
+        var web3;
+        var contract;
+        async function start(){
+            if(window.ethereum){
+                try{
+                    const accounts = await ethereum.request({method:'eth_requestAccounts'});
+                    account = accounts[0];
+                    /* alert("Bem-vindo " + account); */
+                    web3 = new Web3(window.ethereum);
+                }catch(e){}
+            }
+            
+            contract = new web3.eth.Contract([
+	{
+		"inputs": [],
+		"name": "deposit",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "pegarRecompensa",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "aposta",
+				"type": "string"
+			}
+		],
+		"name": "setarApostaa",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "checkAposta",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "checkResultado",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+], "0x3aA5C887B14f302C7CEE4dD5f38d5dC7a12224Ac")
+        chamarBlockchain(contract);
+        criarAposta(contract, account);
+        pegarRecompensa(contract, account);
+
+        }
+
+        async function chamarBlockchain(contract){
+            let resultado = await contract.methods.checkAposta().call();
+            document.querySelector('h2').innerHTML = "Resltado da aposta: " + resultado;
+        }
+
+        async function criarAposta(contract, account){
+            let btn = document.querySelector('button#enviar');
+            btn.addEventListener('click',()=>{
+                alert('Enviando...');
+                let aposta= document.querySelector('input').value;
+                contract.methods.setarApostaa(aposta).send({from:account})
+                .once('confirmation', function(confNumber, receipt){
+                    alert('Sua aposta foi enviada, aguarde o resultado.');
+                });
+            })
+        }
+        
+
+        async function pegarRecompensa(contract, account){
+            let btn = document.querySelector('button#pegar');
+            btn.addEventListener('click',()=>{
+                alert('Verificando...');
+                let aposta= document.querySelector('input').value;
+                contract.methods.pegarRecompensa().send({from:account})
+                .once('confirmation', function(confNumber, receipt){
+                    alert('Se você apostou no Flamengo, você ganhou!');
+                });
+            })
+        }
+
+        
+        start();
+    </script>
+</body>
+</html>
